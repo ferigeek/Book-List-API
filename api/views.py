@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
 from django.views import View
@@ -46,15 +47,15 @@ class BookView(View):
             return HttpResponseBadRequest('Bad request!')
     
     def put(self, request, bookId):
-        request_body = QueryDict(request.body)
+        request_body = json.loads(request.body)
 
         try:
             book = Book.objects.get(id=bookId)
 
-            title = request_body.get('title')
-            author = request_body.get('author')
-            price = request_body.get('price')
-            inventory = request_body.get('inventory')
+            title = request_body.get("title")
+            author = request_body.get("author")
+            price = request_body.get("price")
+            inventory = request_body.get("inventory")
 
             if title:
                 book.title = title
