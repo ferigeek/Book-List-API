@@ -3,10 +3,13 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadReque
 from django.views import View
 from django.forms.models import model_to_dict
 from django.http import JsonResponse, QueryDict
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import Book
 
 # Create your views here.
 
+@method_decorator(csrf_exempt, name='dispatch')
 class BookView(View):
 
     def get(self, request, bookId=None):
@@ -26,38 +29,47 @@ class BookView(View):
                 return JsonResponse(books_list,safe=False)
             else:
                 return HttpResponseNotFound('No books found!')
-    
+
     def post(self, request):
-        request_body = QueryDict(request.body)
-
         try:
-            title = request_body.get(request.body)
-            author = request_body.get(request.body)
-            price = request_body.get(request.body)
+            title = request.POST.get('title')
+            author = request.POST.get('author')
+            price = request.POST.get('price')
 
-            new_book = Book(title, author, price, True)
+            new_book = Book(title=title, author=author, price=price, inventory=True)
             new_book.save()
 
-            response = HttpResponse()
+            response = HttpResponse('Successfully created!')
             response.status_code = 201
-            return response('Success!')
+            return response
         except:
             return HttpResponseBadRequest('Bad request!')
-        
+    
     def put(self, request, bookId):
         request_body = QueryDict(request.body)
 
         try:
             book = Book.objects.get(id=bookId)
 
-            book.title = request_body.get('title')
-            book.author = request_body.get('author')
-            book.price = request_body.get('price')
-            book.inventory = request_body.get('inventory')
+            title = request_body.get('title')
+            author = request_body.get('author')
+            price = request_body.get('price')
+            inventory = request_body.get('inventory')
 
-            response = HttpResponse()
+            if title:
+                book.title = title
+            if author:
+                book.author = author
+            if price:
+                book.price = price
+            if inventory:
+                book.inventory = inventory
+
+            book.save()
+
+            response = HttpResponse('Successfully updated!')
             response.status_code = 201
-            return response('Success!')
+            return response
         except:
             return HttpResponseBadRequest('Bad request!')
         
